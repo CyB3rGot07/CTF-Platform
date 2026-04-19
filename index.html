@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CTF Platform</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #0f172a;
+            color: #e2e8f0;
+        }
+
+        header {
+            background-color: #020617;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        nav a {
+            color: #38bdf8;
+            margin-left: 15px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        section {
+            display: none;
+            padding: 20px;
+        }
+
+        section.active {
+            display: block;
+        }
+
+        input, button {
+            padding: 10px;
+            margin: 5px 0;
+            width: 100%;
+            border: none;
+            border-radius: 5px;
+        }
+
+        button {
+            background-color: #38bdf8;
+            color: black;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #334155;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #1e293b;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>CTF Platform</h1>
+    <nav>
+        <a onclick="showTab('home')">Home</a>
+        <a onclick="showTab('register')">Register</a>
+        <a onclick="showTab('scoreboard')">Scoreboard</a>
+        <a onclick="showTab('profile')">Profile</a>
+    </nav>
+</header>
+
+<!-- HOME -->
+<section id="home" class="active">
+    <h2>Welcome</h2>
+    <p>Compete, hack, and learn. Solve challenges to gain points and climb the leaderboard.</p>
+</section>
+
+<!-- REGISTER -->
+<section id="register">
+    <h2>Register</h2>
+    <form>
+        <input type="text" placeholder="Username" required>
+        <input type="email" placeholder="Email" required>
+        <input type="password" placeholder="Password" required>
+        <button type="submit">Create Account</button>
+    </form>
+</section>
+
+<!-- SCOREBOARD -->
+<section id="scoreboard">
+    <h2>Scoreboard</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>User</th>
+                <th>Score</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Dynamic rows later -->
+            <tr>
+                <td>1</td>
+                <td>player1</td>
+                <td>500</td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+
+<!-- PROFILE -->
+<section id="profile">
+    <h2>User Profile</h2>
+    <p><strong>Username:</strong> player1</p>
+    <p><strong>Score:</strong> 500</p>
+
+    <h3>Solved Challenges</h3>
+    <ul>
+        <li>Challenge 1 - 100 pts</li>
+        <li>Challenge 2 - 200 pts</li>
+    </ul>
+</section>
+
+<script>
+    function showTab(tabId) {
+        const sections = document.querySelectorAll("section");
+        sections.forEach(sec => sec.classList.remove("active"));
+
+        document.getElementById(tabId).classList.add("active");
+    }
+</script>
+
+</body>
+</html>
