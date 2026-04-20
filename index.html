@@ -7,15 +7,46 @@
 
     <style>
         :root {
-            --bg-color: #0f172a;
-            --header-bg: #020617;
-            --card-bg: #1e293b;
-            --text-color: #e2e8f0;
-            --accent-color: #38bdf8;
-            --accent-hover: #0ea5e9;
-            --border-color: #334155;
-            --success-color: #10b981;
-            --danger-color: #ef4444;
+            /* Background / Dark Shades */
+            --dark-900: #020202;
+            --dark-800: #0a0806;
+            --dark-700: #121010;
+            --dark-600: #1a1614;
+            --dark-500: #231e1b;
+            --dark-400: #2d2622;
+            --dark-300: #3a312b;
+
+            /* Text Colours */
+            --text-primary: #f0e8e0;
+            --text-secondary: #9e8e82;
+            --text-muted: #6b5d54;
+            --white: #ffffff;
+
+            /* Card / UI Colours */
+            --card-bg: rgba(18, 14, 12, 0.75);
+            --card-border: rgba(232, 97, 26, 0.10);
+            --card-hover-border: rgba(232, 97, 26, 0.35);
+
+            /* Status / Accent Colours */
+            --accent-orange: #e8611a;
+            --accent-red: #ff3355;
+            --accent-green: #4ade80;
+            --accent-blue: #60a5fa;
+
+            /* Glow / Shadow Effects */
+            --primary-glow: rgba(232, 97, 26, 0.15);
+            --primary-glow-strong: rgba(232, 97, 26, 0.30);
+            --shadow-card: 0 8px 32px rgba(0,0,0,0.4);
+
+            /* Legacy / Mapping */
+            --bg-color: var(--dark-900);
+            --header-bg: var(--dark-800);
+            --text-color: var(--text-primary);
+            --accent-color: var(--accent-orange);
+            --accent-hover: #f17a3a;
+            --border-color: var(--dark-400);
+            --success-color: var(--accent-green);
+            --danger-color: var(--accent-red);
             --font-family: 'Inter', system-ui, -apple-system, sans-serif;
         }
 
@@ -33,7 +64,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--dark-400);
             position: sticky;
             top: 0;
             z-index: 100;
@@ -42,11 +73,11 @@
         header h1 {
             margin: 0;
             font-size: 1.5rem;
-            color: var(--accent-color);
+            color: var(--white);
         }
 
         nav a {
-            color: var(--text-color);
+            color: var(--text-secondary);
             margin-left: 1.5rem;
             text-decoration: none;
             cursor: pointer;
@@ -55,7 +86,7 @@
         }
 
         nav a:hover {
-            color: var(--accent-color);
+            color: var(--accent-orange);
         }
 
         main {
@@ -79,66 +110,80 @@
         }
 
         h2 {
-            border-bottom: 2px solid var(--accent-color);
+            color: var(--white);
+            border-bottom: 2px solid var(--accent-orange);
             padding-bottom: 0.5rem;
             margin-bottom: 1.5rem;
         }
 
+        h3 {
+            color: var(--white);
+        }
+
         .card {
             background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--card-border);
             border-radius: 0.75rem;
             padding: 1.5rem;
             margin-bottom: 1.5rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: var(--shadow-card);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
         }
 
         .card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border-color: var(--card-hover-border);
+            box-shadow: 0 0 20px var(--primary-glow-strong);
         }
 
         input, textarea, select {
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            background-color: var(--dark-600);
+            color: var(--text-primary);
             padding: 0.75rem;
             margin: 0.5rem 0;
             width: 100%;
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--dark-400);
             border-radius: 0.5rem;
             box-sizing: border-box;
         }
 
+        input::placeholder {
+            color: var(--text-muted);
+        }
+
         input:focus {
             outline: none;
-            border-color: var(--accent-color);
+            border-color: var(--accent-orange);
+            box-shadow: 0 0 0 2px var(--primary-glow);
         }
 
         button {
-            background-color: var(--accent-color);
-            color: #020617;
+            background-color: var(--accent-orange);
+            color: var(--dark-900);
             padding: 0.75rem 1.5rem;
             border: none;
             border-radius: 0.5rem;
             font-weight: bold;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: all 0.2s;
             width: auto;
         }
 
         button:hover {
             background-color: var(--accent-hover);
+            box-shadow: 0 0 15px var(--primary-glow-strong);
         }
 
         button.secondary {
             background-color: transparent;
-            border: 1px solid var(--accent-color);
-            color: var(--accent-color);
+            border: 1px solid var(--accent-orange);
+            color: var(--accent-orange);
         }
 
         button.secondary:hover {
-            background-color: rgba(56, 189, 248, 0.1);
+            background-color: var(--primary-glow);
         }
 
         table {
@@ -148,14 +193,17 @@
         }
 
         th, td {
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--dark-400);
             padding: 1rem;
             text-align: left;
         }
 
         th {
-            background-color: var(--card-bg);
-            color: var(--accent-color);
+            background-color: var(--dark-700);
+            color: var(--accent-orange);
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.05em;
         }
 
         .flex-container {
@@ -176,18 +224,19 @@
         }
 
         .toast {
-            background-color: var(--card-bg);
-            border-left: 4px solid var(--accent-color);
+            background-color: var(--dark-600);
+            border-left: 4px solid var(--accent-orange);
             padding: 1rem 1.5rem;
             margin-top: 0.5rem;
             border-radius: 0.5rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+            box-shadow: var(--shadow-card);
             animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s;
             max-width: 300px;
+            color: var(--text-primary);
         }
 
-        .toast.success { border-left-color: var(--success-color); }
-        .toast.error { border-left-color: var(--danger-color); }
+        .toast.success { border-left-color: var(--accent-green); }
+        .toast.error { border-left-color: var(--accent-red); }
 
         @keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
