@@ -281,8 +281,13 @@
             <h2>Register</h2>
             <form id="registerForm">
                 <input type="text" id="regUsername" placeholder="Username" required>
-                <input type="email" id="regEmail" placeholder="Email" required>
+                <input type="email" id="regEmail" placeholder="Email (Gmail preferred)" required>
                 <input type="password" id="regPassword" placeholder="Password" required>
+                <label>Login Type</label>
+                <select id="regLoginType">
+                    <option value="individual">Individual Player</option>
+                    <option value="team">Team Member</option>
+                </select>
                 <button type="submit">Create Account</button>
             </form>
         </div>
@@ -292,11 +297,15 @@
     <section id="scoreboard">
         <div class="card">
             <h2>Scoreboard</h2>
+            <div class="flex-container" style="margin-bottom: 1rem;">
+                <button class="secondary active" id="btnScoreboardPlayers" onclick="updateScoreboard('players')">Players</button>
+                <button class="secondary" id="btnScoreboardTeams" onclick="updateScoreboard('teams')">Teams</button>
+            </div>
             <table id="scoreboardTable">
                 <thead>
-                    <tr>
+                    <tr id="scoreboardHeader">
                         <th>Rank</th>
-                        <th>User/Team</th>
+                        <th>User</th>
                         <th>Score</th>
                     </tr>
                 </thead>
@@ -316,10 +325,18 @@
                 <div>
                     <h3 id="displayUsername">Player</h3>
                     <p id="displayBio">No bio yet.</p>
+                    <p id="displaySocials">
+                        <span id="linkedInLink" class="hidden">LinkedIn</span>
+                        <span id="githubLink" class="hidden">GitHub</span>
+                    </p>
                 </div>
             </div>
+            <p><strong>Player ID:</strong> <span id="displayPlayerId">#---</span></p>
             <p><strong>Score:</strong> <span id="displayScore">0</span></p>
-            <button onclick="toggleEditProfile(true)">Edit Profile</button>
+            <div class="flex-container">
+                <button onclick="toggleEditProfile(true)">Edit Profile</button>
+                <button class="secondary" onclick="shareOnLinkedIn()">Share Achievement on LinkedIn</button>
+            </div>
 
             <h3>Solved Challenges</h3>
             <ul id="solvedChallengesList">
@@ -336,6 +353,10 @@
                 <textarea id="editBio" placeholder="Tell us about yourself"></textarea>
                 <label>Profile Picture URL</label>
                 <input type="url" id="editPicUrl" placeholder="https://example.com/image.jpg">
+                <label>LinkedIn URL</label>
+                <input type="url" id="editLinkedIn" placeholder="https://linkedin.com/in/username">
+                <label>GitHub URL</label>
+                <input type="url" id="editGithub" placeholder="https://github.com/username">
                 <div class="flex-container">
                     <button type="submit">Save Changes</button>
                     <button type="button" class="secondary" onclick="toggleEditProfile(false)">Cancel</button>
@@ -348,7 +369,7 @@
     <section id="teams">
         <div class="card" id="noTeamView">
             <h2>Teams</h2>
-            <p>You are not currently in a team.</p>
+            <p>You are not currently in a team. (Max 5 members per team)</p>
             <div class="flex-container">
                 <div class="card" style="flex: 1;">
                     <h3>Create a Team</h3>
@@ -360,7 +381,7 @@
                 <div class="card" style="flex: 1;">
                     <h3>Join a Team</h3>
                     <form id="joinTeamForm">
-                        <input type="text" id="joinTeamName" placeholder="Team Name" required>
+                        <input type="text" id="joinTeamCode" placeholder="Enter Team Code" required>
                         <button type="submit">Join Team</button>
                     </form>
                 </div>
@@ -368,6 +389,7 @@
         </div>
         <div class="card hidden" id="teamView">
             <h2>Your Team: <span id="myTeamName">Team Alpha</span></h2>
+            <p id="teamCodeDisplay"><strong>Team Code:</strong> <span>---</span></p>
             <h3>Members</h3>
             <ul id="teamMemberList">
                 <!-- Dynamic content -->
@@ -399,10 +421,40 @@
                 <h3>Add New Challenge</h3>
                 <form id="addChallengeForm">
                     <input type="text" id="challTitle" placeholder="Title" required>
-                    <input type="text" id="challCategory" placeholder="Category" required>
+                    <label>Category</label>
+                    <select id="challCategory">
+                        <option value="Web">Web</option>
+                        <option value="Cryptography">Cryptography</option>
+                        <option value="OSINT">OSINT</option>
+                        <option value="Android">Android</option>
+                        <option value="Boot-to-root">Boot-to-root</option>
+                        <option value="Packet Analysis">Packet Analysis</option>
+                        <option value="Forensics">Forensics</option>
+                        <option value="Reverse Engineering">Reverse Engineering</option>
+                        <option value="OT">OT</option>
+                    </select>
+                    <label>Difficulty Level</label>
+                    <select id="challLevel">
+                        <option value="Easy">Easy</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                        <option value="Expert">Expert</option>
+                        <option value="Impossible">Impossible</option>
+                    </select>
                     <input type="number" id="challPoints" placeholder="Points" required>
                     <input type="text" id="challFlag" placeholder="Flag (e.g., CTF{...})" required>
+                    <textarea id="challHint" placeholder="Hint (optional)"></textarea>
+                    <label>Upload Challenge Files (Simulation)</label>
+                    <input type="file" id="challFile">
                     <button type="submit">Add Challenge</button>
+                </form>
+            </div>
+            <div class="card">
+                <h3>Create New Admin Account</h3>
+                <form id="addAdminForm">
+                    <input type="text" id="newAdminUser" placeholder="New Admin Username" required>
+                    <input type="password" id="newAdminPass" placeholder="New Admin Password" required>
+                    <button type="submit">Create Admin</button>
                 </form>
             </div>
             <h3>Existing Challenges</h3>
@@ -418,19 +470,37 @@
 
 <script>
     // --- STATE MANAGEMENT ---
+    function generateId() {
+        return Math.random().toString(36).substr(2, 9).toUpperCase();
+    }
+
+    // Mock data for other players/teams to make it look dynamic
+    let allPlayers = JSON.parse(localStorage.getItem('allPlayers')) || [
+        { username: 'CyberGhost', score: 1200, playerId: 'A1B2C3D4E', socials: { linkedin: '#', github: '#' } },
+        { username: 'ShadowByte', score: 850, playerId: 'F5G6H7I8J', socials: { linkedin: '#', github: '#' } },
+        { username: 'RootUser', score: 2100, playerId: 'K9L0M1N2O', socials: { linkedin: '#', github: '#' } }
+    ];
+
     let currentUser = JSON.parse(localStorage.getItem('currentUser')) || {
         username: 'Player1',
         bio: 'I love security challenges!',
         profilePic: 'https://via.placeholder.com/150',
         score: 0,
         solvedChallenges: [],
-        team: null
+        team: null,
+        playerId: generateId(),
+        socials: { linkedin: '', github: '' }
     };
 
-    let teams = JSON.parse(localStorage.getItem('teams')) || [];
+    let teams = JSON.parse(localStorage.getItem('teams')) || [
+        { name: 'EliteHackers', code: 'EH2024', leader: 'RootUser', members: ['RootUser', 'CyberGhost'], score: 3300 }
+    ];
+
+    let admins = JSON.parse(localStorage.getItem('admins')) || [{ user: 'admin', pass: 'admin123' }];
+
     let challenges = JSON.parse(localStorage.getItem('challenges')) || [
-        { id: 1, title: 'Welcome Challenge', category: 'General', points: 100, flag: 'CTF{welcome}' },
-        { id: 2, title: 'Basics of Web', category: 'Web', points: 200, flag: 'CTF{web_is_fun}' }
+        { id: 1, title: 'Welcome Challenge', category: 'General', level: 'Easy', points: 100, flag: 'CTF{welcome}', hint: 'The flag is in the welcome message.' },
+        { id: 2, title: 'Basics of Web', category: 'Web', level: 'Easy', points: 200, flag: 'CTF{web_is_fun}', hint: 'Check the categories.' }
     ];
 
     // Initialize data
@@ -438,6 +508,9 @@
         saveUserData();
         saveTeamsData();
         saveChallengesData();
+        localStorage.setItem('allPlayers', JSON.stringify(allPlayers));
+        localStorage.setItem('admins', JSON.stringify(admins));
+
         updateProfileUI();
         updateTeamUI();
         updateScoreboard();
@@ -462,7 +535,7 @@
     function showToast(message, type = 'info') {
         const container = document.getElementById('toast-container');
         const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
+        toast.className = 'toast ' + type;
         toast.textContent = message;
         container.appendChild(toast);
         setTimeout(() => toast.remove(), 3000);
@@ -470,10 +543,10 @@
 
     // --- UI NAVIGATION ---
     function showTab(tabId) {
-        const sections = document.querySelectorAll("section");
-        sections.forEach(sec => sec.classList.remove("active"));
+        const sections = document.querySelectorAll('section');
+        sections.forEach(sec => sec.classList.remove('active'));
         const target = document.getElementById(tabId);
-        if (target) target.classList.add("active");
+        if (target) target.classList.add('active');
     }
 
     // --- PROFILE MANAGEMENT ---
@@ -485,6 +558,8 @@
             document.getElementById('editUsername').value = currentUser.username;
             document.getElementById('editBio').value = currentUser.bio;
             document.getElementById('editPicUrl').value = currentUser.profilePic;
+            document.getElementById('editLinkedIn').value = currentUser.socials.linkedin || '';
+            document.getElementById('editGithub').value = currentUser.socials.github || '';
         }
     }
 
@@ -493,12 +568,29 @@
         document.getElementById('displayBio').textContent = currentUser.bio;
         document.getElementById('profilePic').src = currentUser.profilePic;
         document.getElementById('displayScore').textContent = currentUser.score;
+        document.getElementById('displayPlayerId').textContent = '#' + (currentUser.playerId || '---');
+
+        const linkedinLink = document.getElementById('linkedInLink');
+        if (currentUser.socials.linkedin) {
+            linkedinLink.classList.remove('hidden');
+            linkedinLink.innerHTML = '<a href="' + currentUser.socials.linkedin + '" target="_blank" style="color: var(--accent-blue);">LinkedIn</a>';
+        } else {
+            linkedinLink.classList.add('hidden');
+        }
+
+        const githubLink = document.getElementById('githubLink');
+        if (currentUser.socials.github) {
+            githubLink.classList.remove('hidden');
+            githubLink.innerHTML = '<a href="' + currentUser.socials.github + '" target="_blank" style="color: var(--text-primary);">GitHub</a>';
+        } else {
+            githubLink.classList.add('hidden');
+        }
 
         const list = document.getElementById('solvedChallengesList');
         list.innerHTML = '';
         currentUser.solvedChallenges.forEach(ch => {
             const li = document.createElement('li');
-            li.textContent = `${ch.title} - ${ch.points} pts`;
+            li.textContent = ch.title + ' - ' + ch.points + ' pts';
             list.appendChild(li);
         });
     }
@@ -508,12 +600,21 @@
         currentUser.username = document.getElementById('editUsername').value;
         currentUser.bio = document.getElementById('editBio').value;
         currentUser.profilePic = document.getElementById('editPicUrl').value || 'https://via.placeholder.com/150';
+        currentUser.socials.linkedin = document.getElementById('editLinkedIn').value;
+        currentUser.socials.github = document.getElementById('editGithub').value;
 
         saveUserData();
         updateProfileUI();
         toggleEditProfile(false);
         showToast('Profile updated successfully!', 'success');
     });
+
+    function shareOnLinkedIn() {
+        const text = 'I just reached ' + currentUser.score + ' points on the CTF Platform! #CTF #CyberSecurity';
+        const url = 'https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent(window.location.href) + '&summary=' + encodeURIComponent(text);
+        window.open(url, '_blank');
+        showToast('Opening LinkedIn share...', 'info');
+    }
 
     // --- TEAM MANAGEMENT ---
     function updateTeamUI() {
@@ -529,41 +630,114 @@
             const memberList = document.getElementById('teamMemberList');
             memberList.innerHTML = '';
             if (team) {
+                document.querySelector('#teamCodeDisplay span').textContent = team.code;
+                const isLeader = team.leader === currentUser.username;
+
                 team.members.forEach(member => {
                     const li = document.createElement('li');
-                    li.textContent = member;
+                    li.className = 'flex-container';
+                    li.style.justifyContent = 'space-between';
+                    li.style.alignItems = 'center';
+                    li.style.marginBottom = '0.5rem';
+
+                    // Find member points
+                    let points = 0;
+                    if (member === currentUser.username) points = currentUser.score;
+                    else {
+                        const p = allPlayers.find(pl => pl.username === member);
+                        if (p) points = p.score;
+                    }
+
+                    const memberInfo = document.createElement('span');
+                    memberInfo.textContent = member + ' (' + points + ' pts)' + (team.leader === member ? ' [Leader]' : '');
+
+                    li.appendChild(memberInfo);
+
+                    const actions = document.createElement('div');
+                    actions.className = 'flex-container';
+
+                    if (isLeader && member !== currentUser.username) {
+                        const kickBtn = document.createElement('button');
+                        kickBtn.textContent = 'Kick';
+                        kickBtn.className = 'secondary';
+                        kickBtn.style.padding = '0.25rem 0.5rem';
+                        kickBtn.style.fontSize = '0.8rem';
+                        kickBtn.onclick = () => kickMember(member);
+                        actions.appendChild(kickBtn);
+
+                        const promoteBtn = document.createElement('button');
+                        promoteBtn.textContent = 'Promote';
+                        promoteBtn.className = 'secondary';
+                        promoteBtn.style.padding = '0.25rem 0.5rem';
+                        promoteBtn.style.fontSize = '0.8rem';
+                        promoteBtn.onclick = () => promoteMember(member);
+                        actions.appendChild(promoteBtn);
+                    }
+
+                    li.appendChild(actions);
                     memberList.appendChild(li);
                 });
             }
         } else {
             noTeamView.classList.remove('hidden');
             teamView.classList.add('hidden');
+
+            // Show available teams to request join
+            const teamsContainer = document.createElement('div');
+            teamsContainer.innerHTML = '<h3>Available Teams</h3>';
+            teams.forEach(t => {
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.style.display = 'flex';
+                div.style.justifyContent = 'space-between';
+                div.style.alignItems = 'center';
+                div.innerHTML = '<span><strong>' + t.name + '</strong> (' + t.members.length + '/5 members)</span>' +
+                                '<button class="secondary" onclick="requestToJoin(\'' + t.name + '\')">Request to Join</button>';
+                teamsContainer.appendChild(div);
+            });
+            // (Note: In a simple prototype, we just append to noTeamView or similar.
+            // For now, let's just keep it simple and not over-complicate the UI)
         }
+    }
+
+    function requestToJoin(teamName) {
+        showToast('Request sent to ' + teamName + ' leader!', 'success');
     }
 
     document.getElementById('createTeamForm').addEventListener('submit', (e) => {
         e.preventDefault();
         const teamName = document.getElementById('newTeamName').value.trim();
         if (teams.some(t => t.name === teamName)) {
-            alert('Team name already exists!');
+            showToast('Team name already exists!', 'error');
             return;
         }
-        const newTeam = { name: teamName, members: [currentUser.username], score: currentUser.score };
+        const teamCode = Math.random().toString(36).substr(2, 6).toUpperCase();
+        const newTeam = {
+            name: teamName,
+            code: teamCode,
+            leader: currentUser.username,
+            members: [currentUser.username],
+            score: currentUser.score
+        };
         teams.push(newTeam);
         currentUser.team = teamName;
 
         saveTeamsData();
         saveUserData();
         updateTeamUI();
-        showToast(`Team "${teamName}" created!`, 'success');
+        showToast('Team "' + teamName + '" created! Code: ' + teamCode, 'success');
     });
 
     document.getElementById('joinTeamForm').addEventListener('submit', (e) => {
         e.preventDefault();
-        const teamName = document.getElementById('joinTeamName').value.trim();
-        const team = teams.find(t => t.name === teamName);
+        const teamCode = document.getElementById('joinTeamCode').value.trim().toUpperCase();
+        const team = teams.find(t => t.code === teamCode);
         if (!team) {
-            showToast('Team not found!', 'error');
+            showToast('Invalid team code!', 'error');
+            return;
+        }
+        if (team.members.length >= 5) {
+            showToast('Team is full (max 5 members)!', 'error');
             return;
         }
         if (team.members.includes(currentUser.username)) {
@@ -571,13 +745,33 @@
             return;
         }
         team.members.push(currentUser.username);
-        currentUser.team = teamName;
+        currentUser.team = team.name;
 
         saveTeamsData();
         saveUserData();
         updateTeamUI();
-        showToast(`Joined team "${teamName}"!`, 'success');
+        showToast('Joined team "' + team.name + '"!', 'success');
     });
+
+    function kickMember(member) {
+        const team = teams.find(t => t.name === currentUser.team);
+        if (team) {
+            team.members = team.members.filter(m => m !== member);
+            saveTeamsData();
+            updateTeamUI();
+            showToast(member + ' kicked from team.', 'info');
+        }
+    }
+
+    function promoteMember(member) {
+        const team = teams.find(t => t.name === currentUser.team);
+        if (team) {
+            team.leader = member;
+            saveTeamsData();
+            updateTeamUI();
+            showToast(member + ' is now the team leader.', 'success');
+        }
+    }
 
     function leaveTeam() {
         const team = teams.find(t => t.name === currentUser.team);
@@ -599,7 +793,8 @@
     document.getElementById('adminLoginForm').addEventListener('submit', (e) => {
         e.preventDefault();
         const pass = document.getElementById('adminPassword').value;
-        if (pass === 'admin123') { // Simple mock password
+        const admin = admins.find(a => a.pass === pass);
+        if (admin) {
             document.getElementById('adminLogin').classList.add('hidden');
             document.getElementById('adminDashboard').classList.remove('hidden');
             showToast('Admin logged in!', 'success');
@@ -614,6 +809,16 @@
         document.getElementById('adminPassword').value = '';
     }
 
+    document.getElementById('addAdminForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const user = document.getElementById('newAdminUser').value;
+        const pass = document.getElementById('newAdminPass').value;
+        admins.push({ user, pass });
+        localStorage.setItem('admins', JSON.stringify(admins));
+        showToast('New admin account created!', 'success');
+        e.target.reset();
+    });
+
     // --- CHALLENGE MANAGEMENT (ADMIN) ---
     document.getElementById('addChallengeForm').addEventListener('submit', (e) => {
         e.preventDefault();
@@ -621,8 +826,10 @@
             id: Date.now(),
             title: document.getElementById('challTitle').value,
             category: document.getElementById('challCategory').value,
+            level: document.getElementById('challLevel').value,
             points: parseInt(document.getElementById('challPoints').value),
-            flag: document.getElementById('challFlag').value
+            flag: document.getElementById('challFlag').value,
+            hint: document.getElementById('challHint').value
         };
         challenges.push(newChall);
         saveChallengesData();
@@ -649,12 +856,8 @@
             div.style.display = 'flex';
             div.style.justifyContent = 'space-between';
             div.style.alignItems = 'center';
-            div.innerHTML = `
-                <div>
-                    <strong>${c.title}</strong> (${c.category}) - ${c.points} pts
-                </div>
-                <button class="secondary" style="color: var(--danger-color); border-color: var(--danger-color);" onclick="deleteChallenge(${c.id})">Delete</button>
-            `;
+            div.innerHTML = '<div><strong>' + c.title + '</strong> (' + c.category + ' - ' + c.level + ') - ' + c.points + ' pts</div>' +
+                '<button class="secondary" style="color: var(--danger-color); border-color: var(--danger-color);" onclick="deleteChallenge(' + c.id + ')">Delete</button>';
             list.appendChild(div);
         });
     }
@@ -669,27 +872,32 @@
             div.className = 'card';
             div.style.width = 'calc(50% - 1rem)';
             div.style.minWidth = '250px';
-            div.innerHTML = `
-                <h3>${c.title}</h3>
-                <p>Category: ${c.category}</p>
-                <p>Points: ${c.points}</p>
-                ${isSolved ? '<p style="color: var(--success-color); font-weight: bold;">SOLVED</p>' : `
-                    <input type="text" placeholder="CTF{...}" id="flag-${c.id}">
-                    <button onclick="submitFlag(${c.id})">Submit Flag</button>
-                `}
-            `;
+            div.innerHTML = '<h3>' + c.title + '</h3>' +
+                '<p>Category: ' + c.category + '</p>' +
+                '<p>Level: ' + c.level + '</p>' +
+                '<p>Points: ' + c.points + '</p>' +
+                (isSolved ? '<p style="color: var(--success-color); font-weight: bold;">SOLVED</p>' :
+                    '<div id="hint-display-' + c.id + '" class="hidden" style="margin-bottom: 0.5rem; color: var(--accent-blue); font-style: italic;">Hint: ' + (c.hint || 'No hint available.') + '</div>' +
+                    '<div class="flex-container">' +
+                        '<input type="text" placeholder="CTF{...}" id="flag-' + c.id + '" style="flex: 1;">' +
+                        '<button onclick="showHint(' + c.id + ')" class="secondary" style="padding: 0.75rem 1rem;">?</button>' +
+                    '</div>' +
+                    '<button onclick="submitFlag(' + c.id + ')" style="width: 100%; margin-top: 0.5rem;">Submit Flag</button>');
             container.appendChild(div);
         });
     }
 
+    function showHint(id) {
+        document.getElementById('hint-display-' + id).classList.remove('hidden');
+    }
+
     function submitFlag(id) {
         const chall = challenges.find(c => c.id === id);
-        const input = document.getElementById(`flag-${id}`);
+        const input = document.getElementById('flag-' + id);
         if (input.value === chall.flag) {
             currentUser.solvedChallenges.push({ id: chall.id, title: chall.title, points: chall.points });
             currentUser.score += chall.points;
 
-            // Update team score if in a team
             if (currentUser.team) {
                 const team = teams.find(t => t.name === currentUser.team);
                 if (team) team.score += chall.points;
@@ -707,35 +915,58 @@
     }
 
     // --- SCOREBOARD ---
-    function updateScoreboard() {
+    function updateScoreboard(type) {
+        type = type || 'players';
         const tbody = document.querySelector('#scoreboardTable tbody');
+        const header = document.getElementById('scoreboardHeader');
         tbody.innerHTML = '';
 
-        // Combine teams and individual players (for demo purposes, we'll just show teams and our current user if not in a team)
-        let entries = [...teams];
-
-        // Mock some other players/teams if empty
-        if (entries.length === 0 && !currentUser.team) {
-            entries.push({ name: currentUser.username, score: currentUser.score, isPlayer: true });
-        } else if (!currentUser.team) {
-            entries.push({ name: currentUser.username, score: currentUser.score, isPlayer: true });
-        }
-
-        // Sort by score descending
-        entries.sort((a, b) => b.score - a.score);
-
-        entries.forEach((entry, index) => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${index + 1}</td>
-                <td>${entry.name} ${entry.isPlayer ? '(Player)' : '(Team)'}</td>
-                <td>${entry.score}</td>
-            `;
-            tbody.appendChild(tr);
+        const buttons = document.querySelectorAll('#scoreboard .flex-container button');
+        buttons.forEach(btn => {
+            if (btn.textContent.toLowerCase() === type) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
         });
+
+        if (type === 'players') {
+            header.innerHTML = '<th>Rank</th><th>User</th><th>Score</th>';
+            let players = [currentUser, ...allPlayers];
+            players.sort((a, b) => b.score - a.score);
+            players.forEach((p, i) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = '<td>' + (i + 1) + '</td><td>' + p.username + '</td><td>' + p.score + '</td>';
+                tbody.appendChild(tr);
+            });
+        } else {
+            header.innerHTML = '<th>Rank</th><th>Team</th><th>Score</th>';
+            let sortedTeams = JSON.parse(JSON.stringify(teams)).sort((a, b) => b.score - a.score);
+            sortedTeams.forEach((t, i) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = '<td>' + (i + 1) + '</td><td>' + t.name + '</td><td>' + t.score + '</td>';
+                tbody.appendChild(tr);
+            });
+        }
     }
 
-    // Start the app
+    document.getElementById('registerForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        currentUser.username = document.getElementById('regUsername').value;
+        currentUser.playerId = generateId();
+        const type = document.getElementById('regLoginType').value;
+        saveUserData();
+        updateProfileUI();
+        showToast('Registration successful! ID: #' + currentUser.playerId, 'success');
+        setTimeout(() => {
+            if (type === 'team') {
+                showTab('teams');
+            } else {
+                showTab('profile');
+            }
+        }, 1500);
+    });
+
     init();
 </script>
 
